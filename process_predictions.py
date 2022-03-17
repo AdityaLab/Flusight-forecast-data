@@ -19,13 +19,14 @@ import pdb
 
 # death_target = ['1 wk ahead inc death' , '2 wk ahead inc death' , '3 wk ahead inc death' , '4 wk ahead inc death']
 
-models = ['GT-FluFNP','Flusight-ensemble']
 data_ew = Week.thisweek(system="CDC") - 1  # -1 because we have data for the previous (ending) week
 DIR =  './data-forecasts/'
+models = [file.split(DIR)[1] for file in glob.glob(DIR + '/*') if ".md" not in file]
 location_df = pd.read_csv('data-locations/locations.csv')
 location_dict = {location_df['location'][i]:location_df['abbreviation'][i] for i in range(len(location_df))}
 # for each model, get all submissions
 df_list = []
+print(models)
 for model in models:
     model_dir = DIR + '/' + model + '/' 
 
@@ -79,12 +80,17 @@ for model in models:
     """
         convert location to region abbreviation
     """
+    print(len(data_model))
+    print(model)
     df = pd.concat(data_model, ignore_index=True, sort=False)
     df = df.rename(columns={'target': 'ahead'})
-    
     model_list = []
-    for i in range(len(df)): 
-        df.at[i, 'location'] = location_dict[df['location'][i]]
+    df['location']= df['location'].astype(str)
+    for i in range(len(df)):  
+        key = df['location'][i]
+        if len(key) == 1: 
+            key = '0' + key
+        df.at[i, 'location'] = location_dict[key]
         df.at[i, 'ahead'] = df['ahead'][i][0]
         model_list.append(model)
     df['model'] = model
@@ -105,5 +111,6 @@ for model in models:
     df3 = df3.sort_values(by=['forecast_week', 'location', 'ahead', 'type'], ascending=[True, True,True,True])
     df_list.append(df3)  
 df = pd.concat(df_list, ignore_index=True, sort=False)
+df = df.sort_values(by=['model','forecast_week', 'location', 'ahead', 'type'], ascending=[True,True, True,True,True])
 df.to_csv('./predictions.csv',index=False)
 print("done")
