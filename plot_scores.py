@@ -9,6 +9,7 @@ from epiweeks import Week
 from metrics import *
 EPS = 1e-6
 import matplotlib.pyplot as plt
+import math
 
 
 # In[2]:
@@ -46,7 +47,7 @@ df_final = df_total.copy()
 all_model_names = np.array(df_final['model'].drop_duplicates())
 
 
-# In[7]:
+# In[6]:
 
 
 all_model_names = np.array(df_final['model'].drop_duplicates())
@@ -57,30 +58,31 @@ all_regions = np.array(df_gt['location'].drop_duplicates())
 regions_ground_truth = np.array(df_grnd['location'].drop_duplicates())
 
 
-# In[10]:
+# In[7]:
 
 
 df_point = df_final[df_final['type']=='point']
 df_quant = df_final[df_final['type']=='quantile']
 
 
-# In[12]:
+# In[8]:
 
 
 weeks = np.array(df_point['forecast_week'].drop_duplicates())
 max_week = df_grnd['predicted_week'].max()
 
 
-# In[14]:
+# In[9]:
 
 
 df_point['predicted_week'] = df_point['forecast_week']+df_point['ahead']
 
-# Have ground truth only till week 10 (max week)  
+# Have ground truth only till week 10  
+
 df_point = df_point[df_point['predicted_week']<=max_week] 
 
 
-# In[15]:
+# In[10]:
 
 
 # Merging the two datasets on predicted week
@@ -89,7 +91,7 @@ df_newpoint = pd.merge(df_point, df_grnd, on = "predicted_week")
 df_newpoint = df_newpoint[df_newpoint['location_x'] == df_newpoint['location_y']]
 
 
-# In[16]:
+# In[11]:
 
 
 rmse_all = []
@@ -99,7 +101,7 @@ week_ahead = []
 regions = []
 
 
-# In[17]:
+# In[ ]:
 
 
 for model in all_model_names:
@@ -117,201 +119,26 @@ for model in all_model_names:
             regions.append(region)
 
 
-# In[18]:
+# In[ ]:
 
 
 df_point_scores = pd.DataFrame.from_dict({'Model':model_all, 'RMSE':rmse_all, 'MAPE':mape_all, 'Weeks ahead':week_ahead, 'Location':regions})
 
 
-# In[20]:
+# In[ ]:
 
 
 df_point_scores.to_csv('point_scores.csv')
-
-
-# In[21]:
-
-
-# target is ground truth
-df_quant = df_final[df_final['type']=='quantile']
-
-
-# In[23]:
-
-
-# norm_val = (df_quant['value']-df_quant['value'].min())/(df_quant['value'].max()-df_quant['value'].min())
-
-norm_df_quant = df_quant.copy()
-norm_df_quant['predicted_week']= norm_df_quant['forecast_week']+norm_df_quant['ahead']
-norm_df_quant = norm_df_quant[norm_df_quant['predicted_week']<=max_week] 
-
-
-# In[38]:
-
-
-week_ahead = []
-regions = []
-crps_all = []
-ls_all = []
-model_all = []
-cs_all = []
-
-
-# In[39]:
-
-
-# df_newpoint = df_newpoint[df_newpoint['model']!='GH-Flusight']
-# norm_df_quant = norm_df_quant[norm_df_quant['model']!='GH-Flusight']
-
-
-# Problem - some 'ahead' start differently?
-# Problem - some weeks start from 202205
-import warnings
-warnings.filterwarnings("ignore")
-
-
-# In[40]:
-
-
-# All models
-# Ground truth is from covid-hospitalization-all-state-merged_vEW202210.csv
-
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import glob
-from epiweeks import Week
-from metrics import *
-EPS = 1e-6
-import matplotlib.pyplot as plt
-
-
-# In[2]:
-
-
-# ground truth
-df_ground_truth = pd.read_csv('ground_truth.csv') 
-
-
-# In[3]:
-
-
-df_ground_truth.head()
-df_grnd = df_ground_truth[['epiweek', 'region', 'cdc_flu_hosp']]
-df_grnd = df_grnd[df_grnd['epiweek']>=202201]
-df_grnd = df_grnd.rename(columns = {'epiweek':"predicted_week", "cdc_flu_hosp":"value", "region":"location"})
-df_grnd['location'] = df_grnd['location'].str.replace('X', 'US')
-df_grnd['location'] = df_grnd['location'].str.replace('TUS', 'TX')
-df_grnd = df_grnd.sort_values('location', kind = 'mergesort')
-# df_grnd.head()
-
-
-# In[4]:
-
-
-file_dir = './predictions.csv' 
-df_total = pd.read_csv(file_dir)
-
-
-# In[5]:
-
-
-df_total['model'].nunique()
-df_final = df_total.copy()
-all_model_names = np.array(df_final['model'].drop_duplicates())
-
-
-# In[7]:
-
-
-all_model_names = np.array(df_final['model'].drop_duplicates())
-df_gt = df_final[df_final['model']=='GT-FluFNP']
-
-# GT-FluFNP model hasn't predicted for some locations 
-all_regions = np.array(df_gt['location'].drop_duplicates())
-regions_ground_truth = np.array(df_grnd['location'].drop_duplicates())
-
-
-# In[10]:
-
-
-df_point = df_final[df_final['type']=='point']
-df_quant = df_final[df_final['type']=='quantile']
 
 
 # In[12]:
 
 
-weeks = np.array(df_point['forecast_week'].drop_duplicates())
-max_week = df_grnd['predicted_week'].max()
-
-
-# In[14]:
-
-
-df_point['predicted_week'] = df_point['forecast_week']+df_point['ahead']
-
-# Have ground truth only till week 10 (max week)  
-df_point = df_point[df_point['predicted_week']<=max_week] 
-
-
-# In[15]:
-
-
-# Merging the two datasets on predicted week
-df_newpoint = pd.merge(df_point, df_grnd, on = "predicted_week")
-# Removing all unnecessary merges
-df_newpoint = df_newpoint[df_newpoint['location_x'] == df_newpoint['location_y']]
-
-
-# In[16]:
-
-
-rmse_all = []
-model_all= []
-mape_all = []
-week_ahead = []
-regions = []
-
-
-# In[17]:
-
-
-for model in all_model_names:
-    for i in range(1, 5):
-        for region in all_regions:
-            sample = df_newpoint[   (df_newpoint['model']==model)  &   (df_newpoint['ahead']==i)  & (df_newpoint['location_x']==region) ]['value_x'].values
-            target = df_newpoint[   (df_newpoint['model']==model)  &   (df_newpoint['ahead']==i)  & (df_newpoint['location_x']==region) ]['value_y'].values
-            rmse_all.append(rmse(sample, target))
-
-#             Deal with inf values
-            target = np.array([EPS if x ==0 else x for x in target]).reshape((len(target), 1))
-            mape_all.append(mape(sample, target))
-            model_all.append(model)
-            week_ahead.append(i)
-            regions.append(region)
-
-
-# In[18]:
-
-
-df_point_scores = pd.DataFrame.from_dict({'Model':model_all, 'RMSE':rmse_all, 'MAPE':mape_all, 'Weeks ahead':week_ahead, 'Location':regions})
-
-
-# In[20]:
-
-
-df_point_scores.to_csv('point_scores.csv')
-
-
-# In[21]:
-
-
 # target is ground truth
 df_quant = df_final[df_final['type']=='quantile']
 
 
-# In[23]:
+# In[13]:
 
 
 # norm_val = (df_quant['value']-df_quant['value'].min())/(df_quant['value'].max()-df_quant['value'].min())
@@ -321,7 +148,7 @@ norm_df_quant['predicted_week']= norm_df_quant['forecast_week']+norm_df_quant['a
 norm_df_quant = norm_df_quant[norm_df_quant['predicted_week']<=max_week] 
 
 
-# In[38]:
+# In[64]:
 
 
 week_ahead = []
@@ -332,15 +159,19 @@ model_all = []
 cs_all = []
 
 
-# Ignore multiply warnings
+# In[65]:
+
+
+# Runtime warning - invalid value occurs during multiply -- ignore
 import warnings
 warnings.filterwarnings("ignore")
 
 
-# In[40]:
+# In[66]:
 
 
 # All models
+count = 0
 for model in all_model_names:
     print('Compiling scores of model ', model)
     
@@ -430,18 +261,22 @@ for model in all_model_names:
             week_ahead.append(i)
             regions.append(region)
             model_all.append(model)
-                
+               
 
 
-
-
-# In[43]:
+# In[67]:
 
 
 df_spread_scores = pd.DataFrame.from_dict({'Model':model_all, 'Weeks ahead':week_ahead, 'Location':regions, 'LS':ls_all, 'CRPS':crps_all,'CS':cs_all})
 
 
-# In[45]:
+# In[68]:
+
+
+df_spread_scores.isna().sum()
+
+
+# In[70]:
 
 
 df_spread_scores.to_csv('spread_scores.csv')
