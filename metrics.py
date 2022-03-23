@@ -43,6 +43,7 @@ def crps(mean, std, targets):
     Returns:
         float: CRPS
     """
+    std = np.clip(std, EPS, None)
     return ps.crps_gaussian(targets, mean, std).mean()
 
 # -1
@@ -72,6 +73,7 @@ def log_score(
     """
 
     # rescale, changed code
+    std = np.clip(std, EPS, None)
     scale = MinMaxScaler()
     targets = scale.fit_transform(targets)
 
@@ -96,6 +98,7 @@ def interval_score(
     """
 
     # rescale, changed code
+    std = np.clip(std, EPS, None)
     scale = MinMaxScaler()
     targets = scale.fit_transform(targets)
 
@@ -119,6 +122,7 @@ def conf_interval(
     Returns:
         tuple: (low, high) interval
     """
+    var = np.clip(var, EPS, None)
     out_prob = 1.0 - conf
     high = norm.ppf(1.0 - (out_prob / 2), loc=mean, scale=var**0.5)
     low = norm.ppf((1.0 - conf) / 2, loc=mean, scale=var**0.5)
