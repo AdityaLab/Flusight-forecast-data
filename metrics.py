@@ -76,6 +76,8 @@ def log_score(
     std = np.clip(std, EPS, None)
     scale = MinMaxScaler()
     targets = scale.fit_transform(targets)
+    mean = scale.transform(mean)
+    std = scale.scale_ * std
 
     
     t1 = norm.cdf(targets - window / 2.0, mean, std)
@@ -101,6 +103,8 @@ def interval_score(
     std = np.clip(std, EPS, None)
     scale = MinMaxScaler()
     targets = scale.fit_transform(targets)
+    mean = scale.transform(mean)
+    std = scale.scale_ * std
 
 
     rd_val = np.round(targets, decimals=1)
