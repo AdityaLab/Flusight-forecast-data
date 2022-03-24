@@ -166,9 +166,9 @@ def get_pr(pred, var, target, color="blue", label="FluFNP"):
         tuple: (Confidence score, AUC, fraction values)
     """
 
-
-    x = np.arange(0.05, 1.0, 0.01).reshape((95, 1))
-    y = np.array([pres_recall(pred, var, target, c) for c in x])
+    pred_, var_, target_ = pred.squeeze(), var.squeeze(), target.squeeze()
+    x = np.arange(0.05, 1.0, 0.01)
+    y = np.array([pres_recall(pred_, var_, target_, c) for c in x])
 #     plt.plot(list(x) + [1.0], list(y) + [1.0], label=label, color=color)
     conf_score = np.abs(y - x).sum() * 0.01
     auc = y.sum() * 0.01
