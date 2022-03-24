@@ -197,6 +197,8 @@ warnings.filterwarnings("ignore")
 count = 0
 for model in all_model_names:
     print("Compiling scores of model ", model)
+    print(f"Model {count}/{len(all_model_names)}")
+    count += 1
 
     #     All Weeks ahead
     for i in range(1, 5):
