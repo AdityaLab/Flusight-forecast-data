@@ -280,25 +280,35 @@ for model in all_model_names:
                 #
                 #                     print(cr, ls)
 
-                cr = crps(mean_, std_, tg_vals)
-                ls = log_score(mean_, std_, tg_vals, window=0.1)
-                if ls < -10:
+                #             Calculate ls and crps
+                if(0 in std_):
+                    cr_target = np.array([EPS if x ==0 else x for x in tg_vals], dtype=object).reshape(
+                        (len(tg_vals), 1)
+                    )
+                    cr = float(mape(pred_vals, cr_target))
                     ls = -10
-                #                     print(cr, ls, "hi")
+#                     print(cr, ls)
+                else:
+                    cr = crps(mean_, std_, tg_vals)
+                    ls = log_score(mean_, std_, tg_vals, window = 0.1)
+                    if(ls<-10):
+                        ls = -10
+#                     print(cr, ls, "hi")
                 auc, cs, _ = get_pr(mean_, std_**2, tg_vals)
 
-                #                 if(ls<-10 or math.isnan(ls)):
-                #                     ls = -10
-                #                 elif(ls>10):
-                #                     ls = 10
-                #                 if(math.isnan(cr)):
-                #                     cr = 0
-
+                
+#                 if(ls<-10 or math.isnan(ls)):
+#                     ls = -10
+#                 elif(ls>10):
+#                     ls = 10
+#                 if(math.isnan(cr)):
+#                     cr = 0
+                    
                 crps_all.append(cr)
                 ls_all.append(ls)
-                #                 print(cs)
+#                 print(cs)
                 cs_all.append(cs)
-
+                
             else:
                 crps_all.append(np.nan)
                 ls_all.append(np.nan)
