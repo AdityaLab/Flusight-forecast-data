@@ -26,6 +26,9 @@ location_df = pd.read_csv('data-locations/locations.csv')
 location_dict = {location_df['location'][i]:location_df['abbreviation'][i] for i in range(len(location_df))}
 # for each model, get all submissions
 df_list = []
+model_point = ['CMU-TimeSeries', 'Flusight-ensemble', 'LUcompUncertLab-TEVA',
+ 'LUcompUncertLab-VAR2', 'LUcompUncertLab-VAR2K', 'LUcompUncertLab-VAR2K_plusCOVID', 'LUcompUncertLab-VAR2_plusCOVID',
+ 'LUcompUncertLab-humanjudgment','LosAlamos_NAU-CModel_Flu','UT_FluCast-Voltaire']
 print(models)
 for model in models:
     model_dir = DIR + '/' + model + '/' 
@@ -98,7 +101,7 @@ for model in models:
     final_row = {'model': [], 'forecast_week': [], 'ahead':[], 'location':[],'type':[],'quantile':[],
              'value':[]}
     for index, row in df.iterrows():
-        if row['quantile'] == 0.5 and model == 'Flusight-ensemble': 
+        if row['quantile'] == 0.5 and model in model_point: 
             final_row['model'].append(row['model'])
             final_row['forecast_week'].append(row['forecast_week'])
             final_row['ahead'].append(row['ahead'])
