@@ -284,18 +284,10 @@ for model in all_model_names:
                 #                     print(cr, ls)
 
                 #             Calculate ls and crps
-                if(0 in std_):
-                    cr_target = np.array([EPS if x ==0 else x for x in tg_vals], dtype=object).reshape(
-                        (len(tg_vals), 1)
-                    )
-                    cr = float(mape(pred_vals, cr_target))
+                cr = crps(mean_, std_, tg_vals)
+                ls = log_score(mean_, std_, tg_vals, window = 0.1)
+                if(ls<-10):
                     ls = -10
-#                     print(cr, ls)
-                else:
-                    cr = crps(mean_, std_, tg_vals)
-                    ls = log_score(mean_, std_, tg_vals, window = 0.1)
-                    if(ls<-10):
-                        ls = -10
 #                     print(cr, ls, "hi")
                 auc, cs, _ = get_pr(mean_, std_**2, tg_vals)
 
