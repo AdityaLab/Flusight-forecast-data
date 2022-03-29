@@ -1,3 +1,4 @@
+from typing import Callable, Dict, List
 import numpy as np
 import properscoring as ps
 from scipy.stats import norm
@@ -18,6 +19,21 @@ def rmse(predictions, targets):
     """
     return np.sqrt(((predictions - targets) ** 2).mean())
 
+def norm_rmse(predictions, targets):
+    """
+    Root Mean Squared Error
+    Args:
+        predictions (np.ndarray): Point Predictions of the model
+        targets (np.ndarray): Point Targets of the model
+    Returns:
+        float: RMSE
+    """
+    try:
+        scale = MinMaxScaler()
+        targets = scale.fit_transform(targets[None, :])
+        predictions = scale.transform(predictions[None, :])
+    finally:
+        return np.sqrt(((predictions - targets) ** 2).mean())
 
 def mape(predictions, targets):
     """
@@ -173,3 +189,31 @@ def get_pr(pred, var, target, color="blue", label="FluFNP"):
     conf_score = np.abs(y - x).sum() * 0.01
     auc = y.sum() * 0.01
     return auc, conf_score, list(y) + [1.0]
+
+def dist_from_quantiles(quantiles: Dict[float, float]) -> Callable[[float], float]:
+    """
+    Returns an approximation cdf for a given quantile
+    Args:
+        quantiles (Dict[float, float]): Quantiles and corresponding values
+    Returns:
+        Callable: Approximation cdf
+    """
+    def cdf(x: float) -> float:
+        for q, v in quantiles.items():
+            if x < v:
+                return q
+        return 1.0
+    return cdf
+
+def crps_integrated(quantiles: List[Dict[float, float]], target: np.ndarray) -> float:
+    """
+    Returns CRPS for a given quantile
+    Args:
+        quantiles (Dict[float, float]): Quantiles and corresponding values
+        target (float): Target of the model
+    Returns:
+        float: CRPS
+    """
+    cdfs = [dist_from_quantiles(q) for q in quantiles]
+    # TODO: This is veeery slow. Can we do better?
+    return np.array([ps.crps_quadrature([t], cdf, tol=1e-3) for cdf,t in zip(cdfs, target.flatten())]).mean()

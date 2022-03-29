@@ -97,6 +97,7 @@ df_newpoint = df_newpoint[df_newpoint["location_x"] == df_newpoint["location_y"]
 
 
 rmse_all = []
+nrmse_all = []
 model_all = []
 mape_all = []
 week_ahead = []
@@ -120,6 +121,7 @@ for model in all_model_names:
                 & (df_newpoint["location_x"] == region)
             ]["value_y"].values
             rmse_all.append(rmse(sample, target))
+            nrmse_all.append(norm_rmse(sample, target))
 
             #             Deal with inf values
             target = np.array([EPS if x == 0 else x for x in target]).reshape(
@@ -138,6 +140,7 @@ df_point_scores = pd.DataFrame.from_dict(
     {
         "Model": model_all,
         "RMSE": rmse_all,
+        "NRMSE": nrmse_all,
         "MAPE": mape_all,
         "Weeks ahead": week_ahead,
         "Location": regions,
