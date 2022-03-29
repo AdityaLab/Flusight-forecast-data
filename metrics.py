@@ -19,6 +19,7 @@ def rmse(predictions, targets):
     """
     return np.sqrt(((predictions - targets) ** 2).mean())
 
+
 def norm_rmse(predictions, targets):
     """
     Root Mean Squared Error
@@ -35,6 +36,7 @@ def norm_rmse(predictions, targets):
     finally:
         return np.sqrt(((predictions - targets) ** 2).mean())
 
+
 def mape(predictions, targets):
     """
     Mean Absolute Percentage Error
@@ -44,11 +46,12 @@ def mape(predictions, targets):
     Returns:
         float: MAPE
     """
-    
+
     return np.mean(np.abs((predictions - targets) / targets)) * 100
 
-# target ground truth 
-# mean - 
+
+# target ground truth
+# mean -
 def crps(mean, std, targets):
     """
     Quantile-based CRPS
@@ -59,8 +62,12 @@ def crps(mean, std, targets):
     Returns:
         float: CRPS
     """
-    std = np.clip(std, EPS, None)
-    return ps.crps_gaussian(targets, mean, std).mean()
+    std_clip = np.clip(std, EPS, None)
+    ans1 = ps.crps_gaussian(targets, mean, std_clip)
+    ans2 = np.abs(targets - mean)
+    ans = (~np.isclose(std, 0, atol=1e-6)) * ans1 + (np.isclose(std, 0, atol=1e-6)) * ans2
+    return ans.mean()
+
 
 # -1
 def crps_samples(samples, targets):
@@ -75,9 +82,7 @@ def crps_samples(samples, targets):
     return ps.crps_ensemble(targets, samples).mean()
 
 
-def log_score(
-    mean, std, targets, window = 0.1
-):
+def log_score(mean, std, targets, window=0.1):
     """
     Log Score
     Args:
@@ -95,16 +100,14 @@ def log_score(
     mean = scale.transform(mean)
     std = scale.scale_ * std
 
-    
     t1 = norm.cdf(targets - window / 2.0, mean, std)
     t2 = norm.cdf(targets + window / 2.0, mean, std)
-    a =  np.log(np.clip(t2 - t1, EPS, 1.0)).mean()
+    a = np.log(np.clip(t2 - t1, EPS, 1.0)).mean()
     return np.clip(a, -10, 10)
 
+
 # put in slack
-def interval_score(
-    mean, std, targets, window = 1.0
-):
+def interval_score(mean, std, targets, window=1.0):
     """
     Interval Score
     Args:
@@ -122,7 +125,6 @@ def interval_score(
     mean = scale.transform(mean)
     std = scale.scale_ * std
 
-
     rd_val = np.round(targets, decimals=1)
     low_val = np.clip(rd_val - window / 2, a_min=0.0, a_max=None)
     high_val = np.clip(rd_val + window / 2, a_min=None, a_max=13)
@@ -130,9 +132,8 @@ def interval_score(
     t2 = norm.cdf(high_val, loc=mean, scale=std)
     return np.log(np.clip(t2 - t1, a_min=EPS, a_max=1.0)).mean()
 
-def conf_interval(
-    mean, var, conf
-):
+
+def conf_interval(mean, var, conf):
     """
     Confintance Interval for given confidence level
     Args:
@@ -149,9 +150,7 @@ def conf_interval(
     return low, high
 
 
-def pres_recall(
-    mean, var, target, conf
-):
+def pres_recall(mean, var, target, conf):
     """
     Fraction of GT points within the confidence interval
     Args:
@@ -165,7 +164,6 @@ def pres_recall(
     low, high = conf_interval(mean, var, conf)
     truth = ((target > low) & (target < high)).astype("float32")
     return truth.mean(-1)
-
 
 
 # Plot
@@ -185,10 +183,11 @@ def get_pr(pred, var, target, color="blue", label="FluFNP"):
     pred_, var_, target_ = pred.squeeze(), var.squeeze(), target.squeeze()
     x = np.arange(0.05, 1.0, 0.01)
     y = np.array([pres_recall(pred_, var_, target_, c) for c in x])
-#     plt.plot(list(x) + [1.0], list(y) + [1.0], label=label, color=color)
+    #     plt.plot(list(x) + [1.0], list(y) + [1.0], label=label, color=color)
     conf_score = np.abs(y - x).sum() * 0.01
     auc = y.sum() * 0.01
     return auc, conf_score, list(y) + [1.0]
+
 
 def dist_from_quantiles(quantiles: Dict[float, float]) -> Callable[[float], float]:
     """
@@ -198,12 +197,15 @@ def dist_from_quantiles(quantiles: Dict[float, float]) -> Callable[[float], floa
     Returns:
         Callable: Approximation cdf
     """
+
     def cdf(x: float) -> float:
         for q, v in quantiles.items():
             if x < v:
                 return q
         return 1.0
+
     return cdf
+
 
 def crps_integrated(quantiles: List[Dict[float, float]], target: np.ndarray) -> float:
     """
@@ -216,4 +218,9 @@ def crps_integrated(quantiles: List[Dict[float, float]], target: np.ndarray) -> 
     """
     cdfs = [dist_from_quantiles(q) for q in quantiles]
     # TODO: This is veeery slow. Can we do better?
-    return np.array([ps.crps_quadrature([t], cdf, tol=1e-3) for cdf,t in zip(cdfs, target.flatten())]).mean()
+    return np.array(
+        [
+            ps.crps_quadrature([t], cdf, tol=1e-3)
+            for cdf, t in zip(cdfs, target.flatten())
+        ]
+    ).mean()
