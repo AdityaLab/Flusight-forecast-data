@@ -31,10 +31,10 @@ def norm_rmse(predictions, targets):
     """
     try:
         scale = MinMaxScaler()
-        targets = scale.fit_transform(targets[None, :])
-        predictions = scale.transform(predictions[None, :])
+        targets = scale.fit_transform(targets[:,None])
+        predictions = scale.transform(predictions[:,None])
     finally:
-        return np.sqrt(((predictions - targets) ** 2).mean())
+       return np.sqrt(((predictions - targets) ** 2).mean())
 
 
 def mape(predictions, targets):
