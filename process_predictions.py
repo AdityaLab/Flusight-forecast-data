@@ -83,8 +83,7 @@ for model in models:
     """
         convert location to region abbreviation
     """
-    print(len(data_model))
-    print(model)
+    print(model, 'predicted', len(data_model), 'weeks')
     df = pd.concat(data_model, ignore_index=True, sort=False)
     df = df.rename(columns={'target': 'ahead'})
     model_list = []
