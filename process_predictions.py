@@ -22,6 +22,8 @@ import pdb
 data_ew = Week.thisweek(system="CDC") - 1  # -1 because we have data for the previous (ending) week
 DIR =  './data-forecasts/'
 models = [file.split(DIR)[1] for file in glob.glob(DIR + '/*') if ".md" not in file]
+models.remove('GT-FluFNP-raw')
+models.remove('Umass-ARIMA')
 location_df = pd.read_csv('data-locations/locations.csv')
 location_dict = {location_df['location'][i]:location_df['abbreviation'][i] for i in range(len(location_df))}
 # for each model, get all submissions
