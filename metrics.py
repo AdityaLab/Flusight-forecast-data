@@ -178,8 +178,7 @@ def get_pr(pred, var, target, color="blue", label="FluFNP"):
         label (str): Label of the model
     Returns:
         tuple: (Confidence score, AUC, fraction values)
-    """
-
+    """ 
     pred_, var_, target_ = pred.squeeze(), var.squeeze(), target.squeeze()
     x = np.arange(0.05, 1.0, 0.01)
     y = np.array([pres_recall(pred_, var_, target_, c) for c in x])
